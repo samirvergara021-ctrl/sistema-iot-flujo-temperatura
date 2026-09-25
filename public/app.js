@@ -1,5 +1,6 @@
 // ==========================================
-// SISTEMA IoT - DASHBOARD EN TIEMPO REAL
+// SISTEMA IoT - DASHBOARD 3D EN TIEMPO REAL
+// ESP32 + PostgreSQL + Render
 // ==========================================
 
 const flujoElemento = document.getElementById("flujo");
@@ -11,248 +12,376 @@ const ultimaActualizacion = document.getElementById("ultimaActualizacion");
 
 
 // ==========================================
-// GRÁFICA
+// CONFIGURACIÓN DE LA GRÁFICA 3D
 // ==========================================
 
-const ctx = document.getElementById("graficaPrincipal").getContext("2d");
+const configuracionGrafica = {
+    responsive: true,
+    displaylogo: false,
+    scrollZoom: true
+};
 
-const grafica = new Chart(ctx, {
-    type: "line",
 
-    data: {
-        labels: [],
+// ==========================================
+// CREAR GRÁFICA 3D VACÍA
+// ==========================================
 
-        datasets: [
-            {
-                label: "Flujo (L/min)",
-                data: [],
-                borderColor: "#2563eb",
-                backgroundColor: "rgba(37, 99, 235, 0.10)",
-                borderWidth: 2,
-                tension: 0.4,
-                pointRadius: 2,
-                fill: true,
-                yAxisID: "y"
-            },
+const datosIniciales = [{
+    type: "scatter3d",
+    mode: "lines+markers",
 
-            {
-                label: "Temperatura (°C)",
-                data: [],
-                borderColor: "#f59e0b",
-                backgroundColor: "rgba(245, 158, 11, 0.08)",
-                borderWidth: 2,
-                tension: 0.4,
-                pointRadius: 2,
-                fill: false,
-                yAxisID: "y1"
-            }
-        ]
+    x: [],
+    y: [],
+    z: [],
+
+    name: "Mediciones",
+
+    line: {
+        color: "#2563eb",
+        width: 6
     },
 
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
+    marker: {
+        size: 4,
+        color: [],
+        colorscale: "Turbo",
+        showscale: true,
 
-        interaction: {
-            mode: "index",
-            intersect: false
+        colorbar: {
+            title: "Temperatura °C"
+        }
+    },
+
+    hovertemplate:
+        "<b>Medición IoT</b><br>" +
+        "Tiempo: %{text}<br>" +
+        "Flujo: %{y:.2f} L/min<br>" +
+        "Temperatura: %{z:.1f} °C" +
+        "<extra></extra>"
+}];
+
+
+const layoutGrafica = {
+
+    margin: {
+        l: 0,
+        r: 0,
+        b: 0,
+        t: 20
+    },
+
+    paper_bgcolor: "#ffffff",
+
+    scene: {
+
+        bgcolor: "#ffffff",
+
+        xaxis: {
+            title: "Tiempo",
+            showgrid: true
         },
 
-        animation: {
-            duration: 400
+        yaxis: {
+            title: "Flujo (L/min)",
+            showgrid: true
         },
 
-        plugins: {
-            legend: {
-                position: "top"
-            }
+        zaxis: {
+            title: "Temperatura (°C)",
+            showgrid: true
         },
 
-        scales: {
-            x: {
-                title: {
-                    display: true,
-                    text: "Tiempo"
-                }
-            },
-
-            y: {
-                type: "linear",
-                position: "left",
-
-                title: {
-                    display: true,
-                    text: "Flujo (L/min)"
-                },
-
-                beginAtZero: true
-            },
-
-            y1: {
-                type: "linear",
-                position: "right",
-
-                title: {
-                    display: true,
-                    text: "Temperatura (°C)"
-                },
-
-                grid: {
-                    drawOnChartArea: false
-                }
+        camera: {
+            eye: {
+                x: 1.5,
+                y: 1.5,
+                z: 1.1
             }
         }
-    }
-});
+    },
+
+    showlegend: false
+};
+
+
+Plotly.newPlot(
+    "graficaPrincipal",
+    datosIniciales,
+    layoutGrafica,
+    configuracionGrafica
+);
 
 
 // ==========================================
-// CARGAR HISTORIAL
+// CARGAR HISTORIAL DESDE POSTGRESQL
 // ==========================================
 
 async function cargarHistorial() {
 
     try {
 
-        const respuesta = await fetch("/api/historial");
+        const respuesta = await fetch(
+            "/api/historial",
+            { cache: "no-store" }
+        );
 
         if (!respuesta.ok) {
-            throw new Error("No se pudo obtener el historial");
+            throw new Error("No se pudo cargar el historial");
         }
 
         const datos = await respuesta.json();
 
-        grafica.data.labels = [];
-        grafica.data.datasets[0].data = [];
-        grafica.data.datasets[1].data = [];
 
-        datos.forEach(medicion => {
+        // Arrays para la gráfica
+        const posiciones = [];
+        const flujos = [];
+        const temperaturas = [];
+        const horas = [];
+
+
+        datos.forEach((medicion, indice) => {
 
             const fecha = new Date(medicion.fecha);
 
-            const hora = fecha.toLocaleTimeString("es-PA", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
-            });
-
-            grafica.data.labels.push(hora);
-
-            grafica.data.datasets[0].data.push(
-                Number(medicion.flujo)
+            const hora = fecha.toLocaleTimeString(
+                "es-PA",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit"
+                }
             );
 
-            grafica.data.datasets[1].data.push(
-                Number(medicion.temperatura)
+
+            // X = secuencia temporal
+            posiciones.push(indice + 1);
+
+            // Y = flujo
+            flujos.push(
+                Number(medicion.flujo) || 0
             );
+
+            // Z = temperatura
+            temperaturas.push(
+                Number(medicion.temperatura) || 0
+            );
+
+            // Texto de hora
+            horas.push(hora);
+
         });
 
-        grafica.update();
+
+        // Actualizar gráfica 3D
+        Plotly.react(
+            "graficaPrincipal",
+
+            [{
+                type: "scatter3d",
+                mode: "lines+markers",
+
+                x: posiciones,
+                y: flujos,
+                z: temperaturas,
+
+                text: horas,
+
+                name: "Mediciones",
+
+                line: {
+                    color: "#2563eb",
+                    width: 6
+                },
+
+                marker: {
+                    size: 4,
+
+                    color: temperaturas,
+
+                    colorscale: "Turbo",
+
+                    showscale: true,
+
+                    colorbar: {
+                        title: "Temperatura °C"
+                    }
+                },
+
+                hovertemplate:
+                    "<b>Medición IoT</b><br>" +
+                    "Hora: %{text}<br>" +
+                    "Flujo: %{y:.2f} L/min<br>" +
+                    "Temperatura: %{z:.1f} °C" +
+                    "<extra></extra>"
+            }],
+
+            layoutGrafica,
+
+            configuracionGrafica
+        );
+
 
     } catch (error) {
 
-        console.error("Error cargando historial:", error);
+        console.error(
+            "Error cargando gráfica:",
+            error
+        );
 
     }
 }
 
 
 // ==========================================
-// OBTENER MEDICIÓN ACTUAL
+// OBTENER LA ÚLTIMA MEDICIÓN
 // ==========================================
 
 async function actualizarDashboard() {
 
     try {
 
-        const respuesta = await fetch("/api/actual", {
-            cache: "no-store"
-        });
+        const respuesta = await fetch(
+            "/api/actual",
+            { cache: "no-store" }
+        );
+
 
         if (!respuesta.ok) {
-            throw new Error("Error consultando el servidor");
+
+            throw new Error(
+                "No se pudo consultar el servidor"
+            );
+
         }
+
 
         const datos = await respuesta.json();
 
 
-        // --------------------------
-        // VALORES
-        // --------------------------
+        // ==================================
+        // FLUJO
+        // ==================================
 
         flujoElemento.textContent =
             Number(datos.flujo || 0).toFixed(2);
 
+
+        // ==================================
+        // TEMPERATURA
+        // ==================================
+
         temperaturaElemento.textContent =
             Number(datos.temperatura || 0).toFixed(1);
+
+
+        // ==================================
+        // VOLUMEN
+        // ==================================
 
         volumenElemento.textContent =
             Number(datos.volumen || 0).toFixed(2);
 
 
-        // --------------------------
-        // ESTADO
-        // --------------------------
+        // ==================================
+        // ESTADO DEL ESP32
+        // ==================================
 
         if (datos.fecha) {
 
-            const fechaMedicion = new Date(datos.fecha);
+            const fechaMedicion =
+                new Date(datos.fecha);
 
-            const diferencia =
-                Date.now() - fechaMedicion.getTime();
 
-            // Si recibió datos hace menos de 15 segundos
-            if (diferencia < 15000) {
+            const tiempoSinDatos =
+                Date.now() -
+                fechaMedicion.getTime();
 
-                estadoElemento.textContent = "NORMAL";
-                conexionElemento.textContent = "ESP32 ONLINE";
 
-            } else {
+            // Menos de 15 segundos
+            if (tiempoSinDatos < 15000) {
 
-                estadoElemento.textContent = "SIN SEÑAL";
-                conexionElemento.textContent = "ESP32 OFFLINE";
+                conexionElemento.textContent =
+                    "ESP32 ONLINE";
+
+                estadoElemento.textContent =
+                    "NORMAL";
+
+            }
+
+            else {
+
+                conexionElemento.textContent =
+                    "ESP32 OFFLINE";
+
+                estadoElemento.textContent =
+                    "SIN SEÑAL";
 
             }
 
 
             ultimaActualizacion.textContent =
-                fechaMedicion.toLocaleTimeString("es-PA");
+                fechaMedicion.toLocaleTimeString(
+                    "es-PA"
+                );
 
-        } else {
+        }
 
-            estadoElemento.textContent = "SIN DATOS";
-            conexionElemento.textContent = "ESP32 SIN DATOS";
-            ultimaActualizacion.textContent = "--:--:--";
+        else {
+
+            conexionElemento.textContent =
+                "ESP32 SIN DATOS";
+
+            estadoElemento.textContent =
+                "SIN DATOS";
+
+            ultimaActualizacion.textContent =
+                "--:--:--";
 
         }
 
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Error actualizando dashboard:",
+            error
+        );
 
-        estadoElemento.textContent = "ERROR";
-        conexionElemento.textContent = "SERVIDOR SIN CONEXIÓN";
+
+        conexionElemento.textContent =
+            "SERVIDOR SIN CONEXIÓN";
+
+        estadoElemento.textContent =
+            "ERROR";
 
     }
+
 }
 
 
 // ==========================================
-// ACTUALIZACIÓN AUTOMÁTICA
+// ACTUALIZAR TODO
 // ==========================================
 
 async function actualizarTodo() {
 
     await actualizarDashboard();
+
     await cargarHistorial();
 
 }
 
 
-// Primera carga
+// Primera actualización
 actualizarTodo();
 
 
-// Actualizar automáticamente cada segundo
-setInterval(actualizarTodo, 1000);
+// ==========================================
+// ACTUALIZACIÓN EN TIEMPO REAL
+// Cada 1 segundo
+// ==========================================
+
+setInterval(
+    actualizarTodo,
+    1000
+);
