@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sistema IoT | Flujo y Temperatura</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+    <div>
+        <h1>Sistema IoT Automático</h1>
+        <p>Monitoreo de Flujo y Temperatura</p>
+    </div>
+
+    <div class="estado-conexion">
+        <span class="punto-online"></span>
+        <span id="conexionESP32">ESP32 SIN DATOS</span>
+    </div>
+</header>
+
+<main class="dashboard">
+
+    <section class="tarjetas">
+
+        <article class="tarjeta tarjeta-flujo">
+            <div class="icono">💧</div>
+            <p>Flujo actual</p>
+
+            <div class="valor">
+                <span id="flujo">0.00</span>
+                <small>L/min</small>
+            </div>
+
+            <span class="descripcion">Caudal instantáneo</span>
+        </article>
+
+
+        <article class="tarjeta tarjeta-temperatura">
+            <div class="icono">🌡️</div>
+            <p>Temperatura</p>
+
+            <div class="valor">
+                <span id="temperatura">0.0</span>
+                <small>°C</small>
+            </div>
+
+            <span class="descripcion">Temperatura actual</span>
+        </article>
+
+
+        <article class="tarjeta tarjeta-volumen">
+            <div class="icono">🚰</div>
+            <p>Volumen acumulado</p>
+
+            <div class="valor">
+                <span id="volumen">0.00</span>
+                <small>L</small>
+            </div>
+
+            <span class="descripcion">Total registrado</span>
+        </article>
+
+
+        <article class="tarjeta tarjeta-estado">
+            <div class="icono">📡</div>
+            <p>Estado del sistema</p>
+
+            <div class="valor">
+                <span id="estadoSistema">SIN DATOS</span>
+            </div>
+
+            <span class="descripcion">Estado del ESP32</span>
+        </article>
+
+    </section>
+
+
+    <section class="panel">
+
+        <div class="panel-titulo">
+            <div>
+                <h2>Monitoreo en tiempo real</h2>
+                <p>Flujo y temperatura registrados por el ESP32</p>
+            </div>
+
+            <div class="indicador-live">
+                ● EN VIVO
+            </div>
+        </div>
+
+        <div class="contenedor-grafica">
+            <canvas id="graficaPrincipal"></canvas>
+        </div>
+
+    </section>
+
+
+    <section class="informacion">
+
+        <div>
+            <span>Última actualización</span>
+            <strong id="ultimaActualizacion">--:--:--</strong>
+        </div>
+
+        <div>
+            <span>Servidor</span>
+            <strong>ONLINE</strong>
+        </div>
+
+        <div>
+            <span>Base de datos</span>
+            <strong>PostgreSQL</strong>
+        </div>
+
+        <div>
+            <span>Plataforma</span>
+            <strong>ESP32 IoT</strong>
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    Sistema IoT Automático — Monitoreo de Flujo y Temperatura
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
