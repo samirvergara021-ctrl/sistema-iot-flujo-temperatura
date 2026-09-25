@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sistema IoT - Flujo y Temperatura</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <header>
+    <div>
+      <h1>Sistema IoT Automático</h1>
+      <p>Monitoreo de Flujo y Temperatura</p>
+    </div>
+
+    <div class="conexion">
+      <span class="punto"></span>
+      <span id="conexion">ESP32 ONLINE</span>
+    </div>
+  </header>
+
+
+  <main>
+
+    <!-- TARJETAS -->
+
+    <section class="tarjetas">
+
+      <div class="tarjeta flujo">
+        <h3>💧 Flujo Actual</h3>
+
+        <div class="valor">
+          <span id="flujo">0.00</span>
+          <small>L/min</small>
+        </div>
+
+        <p>Caudal instantáneo</p>
+      </div>
+
+
+      <div class="tarjeta temperatura">
+        <h3>🌡️ Temperatura</h3>
+
+        <div class="valor">
+          <span id="temperatura">0.0</span>
+          <small>°C</small>
+        </div>
+
+        <p>Temperatura actual</p>
+      </div>
+
+
+      <div class="tarjeta volumen">
+        <h3>🚰 Volumen Acumulado</h3>
+
+        <div class="valor">
+          <span id="volumen">0.00</span>
+          <small>L</small>
+        </div>
+
+        <p>Total registrado</p>
+      </div>
+
+
+      <div class="tarjeta estado">
+        <h3>📡 Estado</h3>
+
+        <div class="valor estado-texto">
+          <span id="estado">SIN DATOS</span>
+        </div>
+
+        <p>Estado del sistema</p>
+      </div>
+
+    </section>
+
+
+    <!-- GRAFICA FLUJO -->
+
+    <section class="panel">
+
+      <div class="titulo-panel">
+        <div>
+          <h2>💧 Flujo en Tiempo Real</h2>
+          <p>Caudal registrado por el YF-S201</p>
+        </div>
+      </div>
+
+      <div class="grafica">
+        <canvas id="graficaFlujo"></canvas>
+      </div>
+
+    </section>
+
+
+    <!-- GRAFICA TEMPERATURA -->
+
+    <section class="panel">
+
+      <div class="titulo-panel">
+        <div>
+          <h2>🌡️ Temperatura en Tiempo Real</h2>
+          <p>Temperatura registrada por el GY-906</p>
+        </div>
+      </div>
+
+      <div class="grafica">
+        <canvas id="graficaTemperatura"></canvas>
+      </div>
+
+    </section>
+
+
+    <!-- INFORMACION -->
+
+    <section class="informacion">
+
+      <div>
+        <span>Última actualización</span>
+        <strong id="ultimaActualizacion">--:--:--</strong>
+      </div>
+
+      <div>
+        <span>Servidor</span>
+        <strong>ONLINE</strong>
+      </div>
+
+      <div>
+        <span>Base de datos</span>
+        <strong>PostgreSQL</strong>
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <footer>
+    Sistema IoT Automático — ESP32 | Flujo y Temperatura
+  </footer>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
